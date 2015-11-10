@@ -20,33 +20,39 @@ from mininet.node import RemoteController
 net = None
 
 class FVTopo(Topo):
+    host = {}
+    switch = {}
+
     def __init__(self):
         # Initialize topology
         Topo.__init__(self)
+        for i in range(1, 5):
+            # Create Host
+            name = "h%d" % i
+            ip = "10.0.0.%d" % i
+            config = {'ip': ip}
+            self.host[name] = self.addHost(name, **config)
+            # Create Switch
+            name = "s%d" % i
+            dpid = "%d" % i
+            config = {'dpid': dpid}
+            self.switch[name] = self.addSwitch(name, **config)
 
-        # Create template host, switch, and link
-       
+        # Site A
+        self.addLink(self.host['h1'], self.switch['s1'], port2 = 3)
+        self.addLink(self.host['h2'], self.switch['s1'], port2 = 4)
+        # SiteB
+        self.addLink(self.host['h3'], self.switch['s4'], port2 = 3)
+        self.addLink(self.host['h4'], self.switch['s4'], port2 = 4)
+        # Middle
+        videoConfig = {'bw': 10}
+        nonVideoConfig = {'bw': 1}
+        self.addLink(self.switch['s1'], self.switch['s2'], port1 = 1, port2 = 1, **nonVideoConfig)
+        self.addLink(self.switch['s1'], self.switch['s3'], port1 = 2, port2 = 1, **videoConfig)
+        self.addLink(self.switch['s2'], self.switch['s4'], port1 = 2, port2 = 1, **nonVideoConfig)
+        self.addLink(self.switch['s3'], self.switch['s4'], port1 = 2, port2 = 2, **videoConfig)
 
-        # Create switch nodes
-	# example: 
-	#	sconfig = {'dpid': "%016x" % 1}
-	#	self.addHost('h1', **sconfig)
-       
-
-        # Create host nodes
-	# example: self.addHost('h1', **hconfig)
-        
-
-        # Add switch links
-        # Specified to the port numbers to avoid any port number consistency issue       
-        # example: 
-	#	video_link_config = {'bw':10}
-	#	self.addLink('s2', 's1', port1=1, port2=1, **video)
-        
-        
         info( '\n*** printing and validating the ports running on each interface\n' )
-        
-
 
 def startNetwork():
     info('** Creating Overlay network topology\n')
@@ -69,10 +75,13 @@ def stopNetwork():
         info('** Tearing down Overlay network\n')
         net.stop()
 
-if __name__ == '__main__':
+def main():
     # Force cleanup on exit by registering a cleanup function
     atexit.register(stopNetwork)
 
     # Tell mininet to print useful information
     setLogLevel('info')
     startNetwork()
+
+if __name__ == '__main__':
+    main()
