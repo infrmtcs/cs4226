@@ -1,6 +1,6 @@
 '''
-Please add your name:
-Please add your matric number: 
+Please add your name: Duong Thanh Dat
+Please add your matric number: A0119656W
 '''
 
 from pox.core import core
@@ -44,11 +44,11 @@ class VideoSlice (EventMixin):
         packet = event.parsed
         tcp = event.parsed.find('tcp')
 
-        def install(match, outport = None):
+        def install(outport):
             msg = of.ofp_flow_mod() #install a flow table entry
             msg.idle_timeout = 10
             msg.hard_timeout = 30
-            msg.match = match
+            msg.match = of.ofp_match.from_packet(packet, event.port)
             msg.actions.append(of.ofp_action_output(port = outport))
             msg.priority = 1
             msg.data = event.ofp
@@ -66,25 +66,24 @@ class VideoSlice (EventMixin):
                 return tcp.srcport == 80 or tcp.dstport == 80
             return False
 
-        def nearSwitch(hostA, hostB, match):
+        def nearSwitch(hostA, hostB):
             if packet.dst == EthAddr(hostA):
-                install(match, 3)
+                install(3)
             elif packet.dst == EthAddr(hostB):
-                install(match, 4)
+                install(4)
             else:
                 if isVideo():
-                    install(match, 2)
+                    install(2)
                 else:
-                    install(match, 1)
+                    install(1)
 
-        def farSwitch(match):
+        def farSwitch():
             if packet.dst == EthAddr("00:00:00:00:00:01") or packet.dst == EthAddr("00:00:00:00:00:02"):
-                install(match, 1)
+                install(1)
             elif packet.dst == EthAddr("00:00:00:00:00:03") or packet.dst == EthAddr("00:00:00:00:00:04"):
-                install(match, 2)
+                install(2)
 
         def forward(message = None):
-            match = of.ofp_match.from_packet(packet, event.port)
             if packet.dst.is_multicast:
                 flood()
                 return
@@ -92,13 +91,12 @@ class VideoSlice (EventMixin):
                 if (packet.src, packet.dst) in self.blockedList:
                     ban(packet.src, packet.dst)
                     return
-
                 if event.dpid == 2 or event.dpid == 3:
-                    farSwitch(match)
+                    farSwitch()
                 elif event.dpid == 1:
-                    nearSwitch("00:00:00:00:00:01", "00:00:00:00:00:02", match)
+                    nearSwitch("00:00:00:00:00:01", "00:00:00:00:00:02")
                 elif event.dpid == 4:
-                    nearSwitch("00:00:00:00:00:03", "00:00:00:00:00:04", match)
+                    nearSwitch("00:00:00:00:00:03", "00:00:00:00:00:04")
                 log.debug("Got unicast packet for %s at %s (input port %d):", packet.dst, dpid_to_str(event.dpid), event.port)
 
         # flood, but don't install the rule
