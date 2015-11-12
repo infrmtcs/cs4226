@@ -38,12 +38,13 @@ class FVTopo(Topo):
             config = {'dpid': dpid}
             self.switch[name] = self.addSwitch(name, **config)
 
+        localConfig = {'bw': 1000}
         # Site A
-        self.addLink(self.host['h1'], self.switch['s1'], port2 = 3)
-        self.addLink(self.host['h2'], self.switch['s1'], port2 = 4)
+        self.addLink(self.host['h1'], self.switch['s1'], port2 = 3, **localConfig)
+        self.addLink(self.host['h2'], self.switch['s1'], port2 = 4, **localConfig)
         # SiteB
-        self.addLink(self.host['h3'], self.switch['s4'], port2 = 3)
-        self.addLink(self.host['h4'], self.switch['s4'], port2 = 4)
+        self.addLink(self.host['h3'], self.switch['s4'], port2 = 3, **localConfig)
+        self.addLink(self.host['h4'], self.switch['s4'], port2 = 4, **localConfig)
         # Middle
         videoConfig = {'bw': 10}
         nonVideoConfig = {'bw': 1}
@@ -59,7 +60,7 @@ def startNetwork():
     topo = FVTopo()
     global net
     net = Mininet(topo=topo, link = TCLink,
-                  controller=lambda name: RemoteController(name, ip='pox controller ip'),
+                  controller=lambda name: RemoteController(name, ip='192.168.56.102'),
                   listenPort=6633, autoSetMacs=True)
 
     info('** Starting the network\n')
