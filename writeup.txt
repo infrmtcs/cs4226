@@ -1,0 +1,15 @@
+controller.py:
+This controller divides the packets into cases:
+- If it's multicast, flood the packet.
+- If the communication between 2 hosts are banned, a flow with no action will be installed. Otherwise,
+- If the switch is s2 or s3, it will forward to port 1 if the packets are for h1 or h2, and port 2 if they are for h3 and h4. Otherwise,
+- If the switch is s1 or s4, select and install the flow based on the port in source and destination.
+
+mininetSlice.py:
+This mininet code is to initiate the network topology as required.
+
+ctr.sh:
+This script is to setup the POX virtual machine
+
+setup.sh:
+This script is to setup the Mininet virtual machine
